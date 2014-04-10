@@ -13,7 +13,7 @@ You can download [this zip](https://github.com/sergiovilar/Ragnarok-Patch/archiv
 
 	git clone git@github.com:sergiovilar/Ragnarok-Patch.git
 
-Open your terminal on folder that the repository has been cloned/unziped then run:
+Open your terminal on the folder that the repository has been cloned/unzipped then run:
 	
 	npm install
 
