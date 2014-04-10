@@ -2,8 +2,10 @@
 * @Author: sergiovilar
 * @Date:   2014-03-16 20:56:37
 * @Last Modified by:   sergiovilar
-* @Last Modified time: 2014-04-10 08:06:14
+* @Last Modified time: 2014-04-10 08:50:27
 */
+
+var patch_url = 'fpatch.levelupgames.com.br';
 
 var http = require('http');
 var fs = require('fs');
@@ -17,52 +19,91 @@ var arr = arquivo.split('\n');
 var JSFtp = require("jsftp");
 
 var ftp = new JSFtp({
-  host: "fpatch.levelupgames.com.br",
+  host: patch_url,
 });
+
+var downloading = 0;
+var download_limit = 1;
 
 var i = 0;
 function baixaArquivo(){	
 
-	if(i < arr.length){
+	try{
 
-		console.log(arr.length, i);
+		if(i < arr.length){
 
-		if (arr[i].substring(0, 2) !== "//") {
-    	
-			var nomeArquivo = arr[i].replace(arr[i].substring(0, 5), '');
-			var file_url = 'ftp://fpatch.levelupgames.com.br/patch/' + nomeArquivo;
-			
-			if(!fs.existsSync('download/' + nomeArquivo)){
+			console.log(arr.length, i);
 
-				console.log('Baixando '+nomeArquivo+'...');
+			if (arr[i].substring(0, 2) !== "//") {
+	    	
+				var nomeArquivo = arr[i].replace(arr[i].substring(0, 5), '');
+				var file_url = 'ftp://'+patch_url+'/patch/' + nomeArquivo;
+				
+				if(!fs.existsSync('download/' + nomeArquivo)){								
 
-				ftp.get('patch/' + nomeArquivo, 'download/' + nomeArquivo, function(hadErr) {
-		    	
-			    	if (hadErr){
-			    		console.error('There was an error retrieving the file.');
-			    	}else{
-			    		console.log('File copied successfully!');
-			    	}
+					if(downloading < (download_limit - 1)){	
 
-			    	i++;
-			    	baixaArquivo();
-			      		
-			  	});
+						downloading++;		  		
 
-			}else{
+				  		downloadViaFTp(nomeArquivo, function(){
+				  			downloading--;	
+				  		});	  	
 
-				console.log('O arquivo '+nomeArquivo+' já existe, indo para o próximo...');
+				  		i++;
+				    	baixaArquivo();
 
+				  	}else{
+
+				  		downloading++;
+
+				  		downloadViaFTp(nomeArquivo, function(){
+
+				  			downloading--;	
+							i++;
+							baixaArquivo();	 
+
+				  		});
+
+				  	}			  						
+
+				}else{
+
+					console.log('O arquivo '+nomeArquivo+' já existe, indo para o próximo...');
+
+					i++;
+					baixaArquivo();
+				}
+
+			}else{			
 				i++;
 				baixaArquivo();
 			}
 
-		}else{			
-			i++;
-			baixaArquivo();
-		}
+		}	
 
+	}catch(e){
+		console.log(e);
 	}	
+
+}
+
+function downloadViaFTp(nomeArquivo, callback){
+
+	console.log('Baixando '+nomeArquivo+'...');
+
+	ftp.get('patch/' + nomeArquivo, 'download/' + nomeArquivo, function(hadErr) {
+
+		if (hadErr){
+			console.error('There was an error retrieving the file.');
+		}else{
+			console.log('File copied successfully!');
+		}	
+
+		if(callback){
+			callback();
+		}		   	
+		
+	});	
 
 }
 
